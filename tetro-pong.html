@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>Tetro-pong</title>
+    <style type="text/css">
+        html, body {
+        height: 100%;
+        margin: 0;
+        }
+        .tablo {
+            position: absolute;
+            padding: 0px;
+            border-style: solid;
+            border-width: 1px;
+            background-color: khaki;
+            z-index: 10;
+         }
+        .ball {
+            position: absolute;
+            padding: 0px;
+            border-style: solid;
+            border-width: 1px;
+            background-color: green;
+            z-index: 9;
+        }
+    </style>
+    <script type="text/javascript">
+        tabloX1 = 0;
+        tabloX2 = 0;
+        mouseX = Math.round(window.screen.availWidth/2);
+        things = new Array();
+        function setupAll() {
+            let tabloname = 'tablo_1';
+            let tablo1 = new Tablo (tabloname, 500);
+            things.push(tablo1);
+            tablo1.setup();
+
+            for (i=0; i<30; i++) {
+                let ballname = 'ball_'+i;
+                let rad = 15+Math.round(Math.random()*24);
+                let ball = new Ball(ballname, rad);
+                things.push(ball);
+                ball.setup();
+            }
+            
+            play();
+        }
+        function play() {
+            id = setInterval('iterate()', 10);
+        }
+        function iterate() {
+            for(i=0; i<things.length; i++) {
+                things[i].move();
+            }
+            for(i=0; i<things.length; i++) {
+                if (things[i].delete == 1) {
+                    document.getElementById(things[i].name).parentNode.removeChild(document.getElementById(things[i].name));
+                    things.splice(i,1);
+                }
+            }
+        }
+        function Ball (name, radius) {
+            this.name = name;
+            this.radius = radius;
+            this.px = Math.round(window.screen.availWidth/2);
+            this.py = Math.round(window.screen.availHeight/2);
+            this.vx = Math.round(Math.random()*this.radius/2);
+            this.vy = Math.round(Math.random()*this.radius/2);
+            this.delete = 0;
+            this.setup = function setup() {
+                let newBall = document.createElement('div');
+                
+                newBall.className = 'ball';
+                newBall.setAttribute('id', name);
+                newBall.style.width = this.radius*2+'px';
+                newBall.style.height = this.radius*2+ 'px';
+                newBall.style.left = this.px + 'px';
+                newBall.style.top= this.py + 'px';
+                newBall.style.borderRadius = this.radius+'px';
+                document.body.appendChild(newBall);
+
+
+            }
+            this.move = function move() {
+                var maxX = Math.round(window.screen.availWidth-40);
+                var maxY = Math.round(window.screen.availHeight-120);
+                var npx = this.px + this.vx;
+                var npy = this.py + this.vy;
+                //collisions
+                if (npx <= this.radius) {
+                    npx = this.radius + (this.radius-npx);
+                    this.vx = this.vx *(-1); 
+                } 
+                if (npx > maxX) {
+                    npx = maxX - (npx-maxX);
+                    this.vx = this.vx *(-1);
+                }if (npy <= this.radius) {
+                    npy = this.radius + (this.radius-npy);
+                    this.vy = this.vy *(-1); 
+                }
+                if (npy >= maxY) {
+                    if (npx > tabloX1 && npx < tabloX2) {
+                        npy = maxY - (npy-maxY);
+                        this.vy = this.vy*(-1);
+                    } else {
+                        //alert (this.name + 'are going to die.')
+                        this.delete = 1;
+                    }
+                }
+                
+                this.px = npx;
+                this.py = npy;
+                
+                var me = document.getElementById(this.name);
+                //me.style.display='inline';
+                me.style.left = this.px-this.radius+'px';
+                me.style.top = this.py-this.radius+'px';
+            
+            } 
+        }
+        function Tablo (name, width) {
+            this.name = name;
+            this.width = width;
+            this.px = Math.round((window.screen.availWidth-this.width)/2);
+            this.py = Math.round(window.screen.availHeight-120);
+            this.delete = 0;
+            //this.mx = this.px; //never do in such way
+            this.setup = function setup() {
+                let newItem = document.createElement('div');
+                
+                newItem.className = 'tablo';
+                newItem.setAttribute('id', name);
+                newItem.style.width = this.width+'px';
+                newItem.style.height = 30 +'px';
+                newItem.style.left = this.px + 'px';
+                newItem.style.top= this.py + 'px';
+                newItem.style.borderRadius = 15+'px';
+                tabloX1 = this.px;
+                tabloX2 = this.px + this.width;
+                document.body.appendChild(newItem);
+
+            }
+            this.move = function move() {
+                
+                let maxX = Math.round(window.screen.availWidth-40);
+                let npx = mouseX;
+                if ((npx+this.width) > maxX) {
+                    npx = maxX - this.width;
+                }
+                if (npx < 0) {
+                    npx = 0;
+                } 
+                //alert('tablo.move() is called, npx = ' + npx + ' px = ' + this.px);
+                this.px = npx;
+                tabloX1 = this.px;
+                tabloX2 = this.px + this.width;
+                let tb = document.getElementById(this.name);
+                tb.style.left = this.px+'px';
+            }
+            
+        }
+        function tabloControl (event) {
+            //var tablo_1 = document.getElementById("tablo_1");
+            mouseX = event.pageX;
+            //alert('Transfer X to tablo_1.mx: ' + event.clientX + "el: " + tablo_1.className + 'Current t.mx= ' + tablo_1.mx);
+        }
+    </script>
+</head>
+<body onload='setupAll()' onmousemove = 'tabloControl(event)'>
+</body>
